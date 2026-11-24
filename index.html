@@ -1,0 +1,479 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Demon Hunter FPS</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<meta name="description" content="A first-person action shooter in Unreal Engine 5 with C++ gameplay systems: GAS abilities, a time stop, a damage pipeline, enemy AI, waves and inventory.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IM+Fell+English+SC&family=IBM+Plex+Sans:ital,wght@0,400;0,500;0,600;1,400&family=JetBrains+Mono:wght@400;500&display=swap">
+<style>
+/* Layout: a single dark column, like a case file; full-bleed renders between text sections, code set as exhibits. Deliberately single-theme (night). */
+:root {
+  --ink: #0e1115;        /* page ground, blue-black night */
+  --slab: #161a20;       /* raised surfaces: code, figures */
+  --line: #2a3039;       /* hairlines */
+  --bone: #e6e1d6;       /* main text, aged paper */
+  --ash: #9aa0a8;        /* secondary text */
+  --brass: #c9a35f;      /* the one accent: engraved brass */
+  --blood: #a2483f;      /* code keywords */
+  --f-display: "IM Fell English SC", "Iowan Old Style", Georgia, serif;
+  --f-body: "IBM Plex Sans", "Segoe UI", system-ui, sans-serif;
+  --f-mono: "JetBrains Mono", ui-monospace, Consolas, monospace;
+  color-scheme: dark;
+}
+* { box-sizing: border-box; }
+body { background: var(--ink); color: var(--bone); font: 400 1rem/1.65 var(--f-body); }
+a { color: var(--brass); text-underline-offset: 3px; }
+a:focus-visible { outline: 2px solid var(--brass); outline-offset: 3px; }
+.wrap { max-width: 1080px; margin: 0 auto; padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px)); }
+.prose { max-width: 66ch; }
+h1, h2, h3 { text-wrap: balance; font-weight: 400; margin: 0; }
+h2 { font-family: var(--f-display); font-size: clamp(1.9rem, 4vw, 2.6rem); line-height: 1.1; color: var(--bone); }
+h3 { font-family: var(--f-body); font-weight: 600; font-size: 1.05rem; letter-spacing: .01em; }
+p { margin: 0; }
+.eyebrow { font: 500 .72rem/1 var(--f-mono); letter-spacing: .16em; text-transform: uppercase; color: var(--brass); }
+section { padding-block: clamp(3rem, 7vw, 5.5rem); border-top: 1px solid var(--line); }
+.stack { display: grid; gap: 1rem; }
+.muted { color: var(--ash); }
+
+/* hero: the engraved muzzle render carries it */
+.hero { position: relative; }
+.hero img { display: block; width: 100%; height: auto; aspect-ratio: 1330/629; object-fit: cover; max-width: 100%; }
+.hero-text { padding-block: 2rem 3.5rem; display: grid; gap: 1.1rem; }
+.hero h1 { font-family: var(--f-display); font-size: clamp(2.6rem, 8vw, 5.4rem); line-height: .95; letter-spacing: .01em; }
+.hero .lede { font-size: 1.15rem; color: var(--bone); max-width: 60ch; }
+.facts { display: flex; flex-wrap: wrap; gap: .5rem 1.6rem; font: 400 .85rem/1.4 var(--f-mono); color: var(--ash); }
+.facts b { color: var(--bone); font-weight: 500; }
+.ctas { display: flex; flex-wrap: wrap; gap: .75rem; margin-top: .4rem; }
+.btn { display: inline-flex; align-items: center; gap: .5rem; padding: .7rem 1.1rem; border: 1px solid var(--brass); color: var(--brass); text-decoration: none; font: 500 .9rem/1 var(--f-body); }
+.btn.solid { background: var(--brass); color: var(--ink); }
+.btn:hover { filter: brightness(1.12); }
+
+/* video slot */
+.video { aspect-ratio: 16/9; max-width: 100%; border: 1px dashed var(--line); background: var(--slab); display: grid; place-items: center; text-align: center; padding: 1.5rem; color: var(--ash); font: 400 .9rem/1.5 var(--f-mono); }
+
+/* systems list */
+.systems { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 300px), 1fr)); gap: 2.2rem 2.6rem; margin-top: 2.5rem; }
+.sys { display: grid; gap: .5rem; align-content: start; min-width: 0; }
+.sys .tag { font: 400 .75rem/1.3 var(--f-mono); color: var(--ash); }
+.sys p { color: #cfcac0; font-size: .95rem; }
+
+/* figures */
+.gallery { display: grid; grid-template-columns: repeat(6, 1fr); gap: 10px; margin-top: 2.2rem; }
+figure { margin: 0; min-width: 0; }
+figure img { display: block; width: 100%; height: 100%; object-fit: cover; max-width: 100%; background: var(--slab); }
+figcaption { font: 400 .78rem/1.45 var(--f-mono); color: var(--ash); padding-top: .45rem; }
+.g-2 { grid-column: span 2; } .g-3 { grid-column: span 3; } .g-4 { grid-column: span 4; } .g-6 { grid-column: span 6; }
+.ar-wide img { aspect-ratio: 16/9; } .ar-std img { aspect-ratio: 16/10; }
+@media (max-width: 720px) { .gallery { grid-template-columns: 1fr; } .g-2, .g-3, .g-4, .g-6 { grid-column: auto; } }
+
+/* architecture diagram */
+.diagram { margin-top: 2.2rem; overflow-x: auto; border: 1px solid var(--line); background: var(--slab); padding: 1rem; }
+.diagram svg { display: block; min-width: 760px; width: 100%; height: auto; }
+.d-box { fill: var(--ink); stroke: var(--line); stroke-width: 1.2; }
+.d-core { fill: var(--ink); stroke: var(--brass); stroke-width: 1.4; }
+.d-h { fill: var(--bone); font: 600 14px var(--f-body); }
+.d-t { fill: var(--ash); font: 400 11.5px var(--f-mono); }
+.d-arrow { stroke: var(--brass); stroke-width: 1.3; fill: none; }
+.d-label { fill: var(--brass); font: 400 11px var(--f-mono); }
+.d-head { fill: var(--brass); }
+
+/* code exhibits */
+.exhibit { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1.55fr); gap: 1.5rem 2.6rem; margin-top: 2.8rem; align-items: start; }
+.exhibit .note { display: grid; gap: .6rem; }
+.exhibit .note p { color: #cfcac0; font-size: .95rem; }
+.exhibit .file { font: 400 .75rem/1.3 var(--f-mono); color: var(--ash); }
+pre { margin: 0; background: var(--slab); border: 1px solid var(--line); border-left: 2px solid var(--brass); padding: 1rem 1.1rem; overflow-x: auto; font: 400 .8rem/1.6 var(--f-mono); color: var(--bone); tab-size: 4; min-width: 0; }
+pre .k { color: #d8826f; } pre .c { color: #7d8794; font-style: italic; } pre .n { color: var(--brass); }
+@media (max-width: 820px) { .exhibit { grid-template-columns: 1fr; } }
+
+.pipeline { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 220px), 1fr)); gap: 1.4rem; margin-top: 2rem; }
+.step { border-top: 1px solid var(--brass); padding-top: .8rem; display: grid; gap: .35rem; }
+.step .n { font: 500 .75rem/1 var(--f-mono); color: var(--brass); letter-spacing: .1em; }
+.step p { font-size: .92rem; color: #cfcac0; }
+
+.stack-list { display: flex; flex-wrap: wrap; gap: .5rem; margin-top: 1.2rem; }
+.chip { font: 400 .8rem/1 var(--f-mono); padding: .45rem .7rem; border: 1px solid var(--line); color: var(--bone); }
+
+footer { border-top: 1px solid var(--line); padding-block: 2.5rem 3rem; color: var(--ash); font-size: .85rem; }
+footer .wrap { display: flex; flex-wrap: wrap; justify-content: space-between; gap: 1rem; }
+@media (prefers-reduced-motion: no-preference) { .btn { transition: filter .15s; } }
+</style>
+<style>html,body{margin:0}img{max-width:100%}</style>
+</head>
+<body>
+
+
+<header class="hero">
+  <img src="img/gp_street_tmp.jpg" alt="First-person view holding the machine pistol on a wet, lamp-lit cobbled street at night, with the health bar, ability cooldowns and ammo counter on screen" width="1330" height="629">
+  <div class="wrap hero-text">
+    <span class="eyebrow">Unreal Engine 5 · C++ · team project</span>
+    <h1>Demon Hunter FPS</h1>
+    <p class="lede">A first-person action shooter about a hunter of the supernatural, with slower, deliberate combat in the spirit of Resident Evil 4. I lead a team of four and build the gameplay code: abilities, weapons, the damage model, enemy AI, wave survival and the inventory.</p>
+    <div class="facts">
+      <span><b>Role</b> Team lead, gameplay programmer</span>
+      <span><b>Team</b> 4 people</span>
+      <span><b>Engine</b> Unreal Engine 5, C++ and Blueprints</span>
+      <span><b>Status</b> In development (source is private)</span>
+    </div>
+    <div class="ctas">
+      <a class="btn solid" href="#code">Read the code</a>
+    </div>
+  </div>
+</header>
+
+<main>
+<section id="gameplay">
+  <div class="wrap">
+    <div class="stack prose">
+      <span class="eyebrow">Gameplay</span>
+      <h2>In the game</h2>
+      <p class="muted">Captured in the editor from builds in progress.</p>
+    </div>
+    <div class="gallery">
+      <figure class="g-3"><img src="img/gp_attic_rifle.jpg" alt="First-person rifle aimed at a chalk sigil on the wall of a dim attic flat, HUD with time stop and wraith's hand cooldowns" width="1523" height="857"><figcaption>The hunter's attic flat: chalk sigil, rain on the window, ability cooldowns bottom left</figcaption></figure>
+      <figure class="g-3"><img src="img/gp_trader.jpg" alt="Trader screen with the trader's stock, the player's backpack, hotbar keys and a talisman slot, describing the machine pistol" width="1600" height="759"><figcaption>Trading: drag to buy or sell, bind items to keys, trust level with the trader</figcaption></figure>
+      <figure class="g-6 ar-wide"><img src="img/tmp_night.jpg" alt="The TMP machine pistol lying on wet asphalt at night" width="1600" height="900"><figcaption>The machine pistol model: real scale, 30-round stick magazine, rigged bolt and magazine</figcaption></figure>
+      <figure class="g-2 ar-wide"><img src="img/tmp_front.jpg" alt="Front three-quarter render of the TMP with the long magazine" width="1600" height="900"><figcaption>Machine pistol, front three-quarter</figcaption></figure>
+      <figure class="g-2 ar-wide"><img src="img/tmp_rear.jpg" alt="Rear three-quarter render of the TMP showing the rear sight and grip" width="1600" height="900"><figcaption>Machine pistol, rear three-quarter</figcaption></figure>
+      <figure class="g-2 ar-wide"><img src="img/tmp_fps.jpg" alt="First-person view down the top of the TMP" width="1600" height="900"><figcaption>Machine pistol, first-person sight picture</figcaption></figure>
+    </div>
+  </div>
+</section>
+
+<section id="game">
+  <div class="wrap stack prose">
+    <span class="eyebrow">The game</span>
+    <h2>Slow, heavy fights in the dark</h2>
+    <p>A wave survival mode on a night street at the edge of a forest: four waves of creatures, a boss, short breaks to refill ammo and heal, and checkpoints on death.</p>
+    <p class="muted">Noir and gothic in tone, with scarce ammo, guns that jam when worn, and abilities that turn a bad fight around.</p>
+  </div>
+</section>
+
+<section id="systems">
+  <div class="wrap">
+    <div class="stack prose">
+      <span class="eyebrow">What I built</span>
+      <h2>Gameplay systems</h2>
+      <p class="muted">Weapons, aiming, melee and damage are written in C++. Player abilities and all health and damage run on Unreal's Gameplay Ability System. Simpler level logic stays in Blueprints.</p>
+    </div>
+    <div class="systems">
+      <div class="sys">
+        <h3>Time stop</h3>
+        <span class="tag">GAS ability · bullet braking · post-process</span>
+        <p>Pressing E freezes incoming enemy bullets mid-air. Each bullet rolls its own stop distance, then brakes on an exponential ease-out in real time while the world is frozen, so the player can step out of the line of fire.</p>
+      </div>
+      <div class="sys">
+        <h3>Wraith's hand</h3>
+        <span class="tag">GAS ability · physics · camera modifier</span>
+        <p>A huge, faint spectral hand grabs an enemy up to 20 m away, holds it in front of the player following their aim with spring lag, and throws it into walls or other enemies for impact damage and a knockdown.</p>
+      </div>
+      <div class="sys">
+        <h3>Damage pipeline</h3>
+        <span class="tag">GameplayEffect execution · attribute sets · tags</span>
+        <p>Every hit is a tagged hit record (bullet, blade, impact, holy, silver...) resolved by one execution: attacker and target modifiers, crits, a flat damage threshold for armour and poise damage that can stun.</p>
+      </div>
+      <div class="sys">
+        <h3>Weapons and katana</h3>
+        <span class="tag">C++ weapons · procedural viewmodel · recoil</span>
+        <p>Pistol and a TMP machine pistol (two-stage trigger: half pull for single shots, full pull for auto) with magazines, ammo types, wear and jams, recoil and procedural viewmodel sway. A katana with wide off-screen cuts and a "path cut" dash attack. Dropped magazines and shell casings are physical.</p>
+      </div>
+      <div class="sys">
+        <h3>Enemy base and AI</h3>
+        <span class="tag">AIpzEnemyBase · data assets · StateTree</span>
+        <p>One shared enemy class configured per creature by a data asset. Enemies have ambient routines (patrols, activity spots), react to noise and glimpses (Ambient, Alert, Combat), break poise into stuns and get shoved by physics hit reactions.</p>
+      </div>
+      <div class="sys">
+        <h3>Wave survival</h3>
+        <span class="tag">wave manager · checkpoints · atmosphere</span>
+        <p>Data-driven waves with shuffled enemy mixes, spawn groups away from the player, refill points between waves, a boss phase and checkpoints. Street lamps die and the fog thickens as the waves go on.</p>
+      </div>
+      <div class="sys">
+        <h3>Inventory and loot</h3>
+        <span class="tag">grid inventory · stash · trader · loot menu</span>
+        <p>A slot-based backpack and stash with stacking, swap and merge, hotbar keys and armour and talisman slots. Bodies and containers open a loot list; a trader screen reuses the same grid. A corpse manager caps bodies and removes searched ones first.</p>
+      </div>
+      <div class="sys">
+        <h3>Dialogue</h3>
+        <span class="tag">data-driven dialogue · head-look animation</span>
+        <p>Branching conversations defined in data assets, with a close-up camera on the speaker's face and a procedural head and eye look-at so characters follow the player while they talk.</p>
+      </div>
+      <div class="sys">
+        <h3>Tooling and tests</h3>
+        <span class="tag">console commands · automated test runs</span>
+        <p>Every system ships with console commands for tuning and automated runs: a time stop test captures screenshots of each braking stage, and spawn, loot and inventory commands make bugs reproducible.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section id="architecture">
+  <div class="wrap">
+    <div class="stack prose">
+      <span class="eyebrow">Architecture</span>
+      <h2>How the code fits together</h2>
+      <p class="muted">The player and every enemy carry an Ability System Component. All damage, from bullets to a thrown enemy hitting a wall, goes through one combat core.</p>
+    </div>
+    <div class="diagram" role="img" aria-label="Architecture diagram: player abilities, weapons and enemies all send hits through the combat core, which applies a damage GameplayEffect to health and combat attribute sets. The wave manager spawns enemies; the inventory feeds weapons and loot.">
+      <svg viewBox="0 0 980 470" xmlns="http://www.w3.org/2000/svg">
+        <defs><marker id="ah" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path class="d-head" d="M0,0 L10,5 L0,10 z"/></marker></defs>
+        <!-- player -->
+        <rect class="d-box" x="20" y="20" width="290" height="150"/>
+        <text class="d-h" x="36" y="46">Player character</text>
+        <text class="d-t" x="36" y="70">Ability System Component</text>
+        <text class="d-t" x="36" y="90">GA_TimeStop · GA_WraithHand</text>
+        <text class="d-t" x="36" y="110">GA_Dash (dodge) · GA_Heal</text>
+        <text class="d-t" x="36" y="130">Stamina · Finisher</text>
+        <text class="d-t" x="36" y="150">Viewmodel motion · Recoil</text>
+        <!-- weapons -->
+        <rect class="d-box" x="20" y="200" width="290" height="110"/>
+        <text class="d-h" x="36" y="226">Weapons</text>
+        <text class="d-t" x="36" y="250">ShooterWeapon (pistol, SMG)</text>
+        <text class="d-t" x="36" y="270">KatanaWeapon · Projectile</text>
+        <text class="d-t" x="36" y="290">Effects · casings · magazines</text>
+        <!-- inventory -->
+        <rect class="d-box" x="20" y="340" width="290" height="110"/>
+        <text class="d-h" x="36" y="366">Inventory</text>
+        <text class="d-t" x="36" y="390">PlayerInventory · ItemDefinition</text>
+        <text class="d-t" x="36" y="410">Stash · Trader · Loot containers</text>
+        <text class="d-t" x="36" y="430">Grid UI · Hotbar · Loot menu</text>
+        <!-- combat core -->
+        <rect class="d-core" x="370" y="140" width="250" height="190"/>
+        <text class="d-h" x="386" y="166">Combat core</text>
+        <text class="d-t" x="386" y="190">FIpzHitData (tags, amount)</text>
+        <text class="d-t" x="386" y="210">DamageLibrary::ApplyHit</text>
+        <text class="d-t" x="386" y="230">GE_Damage</text>
+        <text class="d-t" x="386" y="250">  └ DamageExecution</text>
+        <text class="d-t" x="386" y="275">HealthSet: HP, threshold, poise</text>
+        <text class="d-t" x="386" y="295">CombatSet: out/in damage,</text>
+        <text class="d-t" x="386" y="313">  crit, armour piercing</text>
+        <!-- enemies -->
+        <rect class="d-box" x="680" y="20" width="280" height="190"/>
+        <text class="d-h" x="696" y="46">Enemies</text>
+        <text class="d-t" x="696" y="70">AIpzEnemyBase + EnemyDefinition</text>
+        <text class="d-t" x="696" y="90">Awareness: Ambient/Alert/Combat</text>
+        <text class="d-t" x="696" y="110">AmbientBrain · ActivitySpots</text>
+        <text class="d-t" x="696" y="130">StateTree combat · cover tasks</text>
+        <text class="d-t" x="696" y="150">HitReaction (physics shove)</text>
+        <text class="d-t" x="696" y="170">Noise library · Corpse manager</text>
+        <text class="d-t" x="696" y="190">Dogman, Goatman, Skinwalker...</text>
+        <!-- waves -->
+        <rect class="d-box" x="680" y="250" width="280" height="110"/>
+        <text class="d-h" x="696" y="276">Waves and levels</text>
+        <text class="d-t" x="696" y="300">WaveManager · CombatZone</text>
+        <text class="d-t" x="696" y="320">Checkpoint · RefillSpot</text>
+        <text class="d-t" x="696" y="340">Wave HUD · boss phase</text>
+        <!-- dialogue -->
+        <rect class="d-box" x="680" y="380" width="280" height="70"/>
+        <text class="d-h" x="696" y="406">Dialogue</text>
+        <text class="d-t" x="696" y="430">DialogueAsset · Widget · HeadLook</text>
+        <!-- arrows -->
+        <path class="d-arrow" marker-end="url(#ah)" d="M310,120 C340,120 340,190 368,190"/>
+        <text class="d-label" x="318" y="112">ability hits</text>
+        <path class="d-arrow" marker-end="url(#ah)" d="M310,250 L368,250"/>
+        <text class="d-label" x="318" y="242">shots</text>
+        <path class="d-arrow" marker-end="url(#ah)" d="M165,340 L165,312"/>
+        <text class="d-label" x="172" y="331">equips</text>
+        <path class="d-arrow" marker-end="url(#ah)" d="M678,130 C650,130 650,190 622,190"/>
+        <text class="d-label" x="628" y="122">enemy hits</text>
+        <path class="d-arrow" marker-end="url(#ah)" d="M622,230 C650,230 650,170 678,170"/>
+        <text class="d-label" x="626" y="246">damage</text>
+        <path class="d-arrow" marker-end="url(#ah)" d="M820,250 L820,212"/>
+        <text class="d-label" x="828" y="236">spawns</text>
+        <path class="d-arrow" marker-end="url(#ah)" d="M678,200 C520,380 420,400 312,400"/>
+        <text class="d-label" x="470" y="392">loot on death</text>
+      </svg>
+    </div>
+  </div>
+</section>
+
+<section id="code">
+  <div class="wrap">
+    <div class="stack prose">
+      <span class="eyebrow">Code samples</span>
+      <h2>Excerpts from the source</h2>
+      <p class="muted">Short, lightly trimmed excerpts.</p>
+    </div>
+
+    <div class="exhibit">
+      <div class="note">
+        <h3>Resolving a hit</h3>
+        <span class="file">Combat/IpzDamageExecution.cpp</span>
+        <p>One GameplayEffect execution turns every hit into health and poise damage. The hit's tags count on both sides, so a perk like "+25% blade damage" or a creature's "weak to silver" is just a tagged attribute modifier.</p>
+        <p>Armour is a flat damage threshold. A share of every hit always gets through, so heavy enemies are tough but never immune.</p>
+      </div>
+<pre><code><span class="k">float</span> Damage = BaseDamage * Outgoing * Incoming;
+<span class="k">const bool</span> bCrit = CritChance > <span class="n">0.0f</span> && FMath::FRand() < CritChance;
+<span class="k">if</span> (bCrit)
+{
+	Damage *= CritMultiplier;
+}
+
+<span class="c">// armour: flat threshold, reduced by the ammo
+// and the attacker's armour piercing</span>
+<span class="k">const float</span> EffectiveThreshold =
+	FMath::Max(<span class="n">0.0f</span>, Threshold - DTReduction) * DTMultiplier;
+
+<span class="k">if</span> (Damage > <span class="n">0.0f</span> && EffectiveThreshold > <span class="n">0.0f</span>)
+{
+	<span class="c">// a minimum share always gets through (default 20%)</span>
+	Damage = FMath::Max(Damage - EffectiveThreshold,
+		Damage * FMath::Clamp(MinShare, <span class="n">0.0f</span>, <span class="n">1.0f</span>));
+}
+
+<span class="k">const float</span> Poise = BasePoise * PoiseMultiplier;
+
+<span class="k">if</span> (Damage > <span class="n">0.0f</span>)
+{
+	Out.AddOutputModifier(FGameplayModifierEvaluatedData(
+		UIpzHealthSet::GetPendingDamageAttribute(),
+		EGameplayModOp::Additive, Damage));
+}</code></pre>
+    </div>
+
+    <div class="exhibit">
+      <div class="note">
+        <h3>Braking bullets in a time stop</h3>
+        <span class="file">Abilities/GA_TimeStop.cpp</span>
+        <p>Each bullet gets a random stop distance, biased toward the far end so stops look scattered rather than lined up. It then slides to a halt on a normalised exponential curve.</p>
+        <p>The braking distance per unit of speed is the integral of that curve, so a fast bullet starts braking earlier and still stops exactly on its mark.</p>
+      </div>
+<pre><code><span class="k">float</span> UGA_TimeStop::GetFreezeDistance(<span class="k">const</span> AActor* Projectile)
+{
+	<span class="k">if</span> (<span class="k">const float</span>* Rolled = FreezeDistances.Find(Projectile))
+	{
+		<span class="k">return</span> *Rolled;
+	}
+	<span class="k">const float</span> Max = FMath::Max(FreezeDistanceMax, FreezeDistanceMin);
+	<span class="k">const float</span> Distance = FreezeDistanceMin + (Max - FreezeDistanceMin)
+		* FMath::Pow(FMath::FRand(), FMath::Max(FreezeDistanceBias, <span class="n">0.1f</span>));
+	FreezeDistances.Add(Projectile, Distance);
+	<span class="k">return</span> Distance;
+}
+
+<span class="c">// 0..1 eased progress: fast at first, settling smoothly at rest</span>
+<span class="k">float</span> UGA_TimeStop::BrakeCurve(<span class="k">float</span> Alpha) <span class="k">const</span>
+{
+	<span class="k">const float</span> S = FMath::Max(BrakeSharpness, <span class="n">1.0f</span>);
+	<span class="k">return</span> (<span class="n">1.0f</span> - FMath::Pow(<span class="n">2.0f</span>, -S * FMath::Clamp(Alpha, <span class="n">0.0f</span>, <span class="n">1.0f</span>)))
+		/ (<span class="n">1.0f</span> - FMath::Pow(<span class="n">2.0f</span>, -S));
+}
+
+<span class="c">// distance covered while braking, per unit of speed</span>
+<span class="k">const float</span> BrakeDistancePerSpeed =
+	Duration * (<span class="n">1.0f</span> - FMath::Pow(<span class="n">2.0f</span>, -S)) / (S * UE_LN2);</code></pre>
+    </div>
+
+    <div class="exhibit">
+      <div class="note">
+        <h3>Building a wave</h3>
+        <span class="file">Waves/IpzWaveManager.cpp</span>
+        <p>A wave lists how many of each creature it sends. They go into a bag that is shuffled with Fisher-Yates, so creature types mix through the wave instead of arriving in blocks.</p>
+        <p>Spawn points are filtered by the wave's spawn groups, kept away from the player and never reused twice in a row.</p>
+      </div>
+<pre><code><span class="k">void</span> AIpzWaveManager::BuildSpawnBag()
+{
+	SpawnBag.Reset();
+	<span class="k">const</span> FIpzWaveDefinition* Definition = GetWaveDefinition();
+	<span class="k">if</span> (!Definition || !HasCounts(*Definition))
+	{
+		<span class="k">return</span>;  <span class="c">// no counts: weighted random picks instead</span>
+	}
+	<span class="k">for</span> (<span class="k">const</span> FIpzWaveEnemyMix& Entry : Definition->EnemyMix)
+	{
+		<span class="k">for</span> (int32 i = <span class="n">0</span>; Entry.EnemyClass && i < Entry.Count; ++i)
+		{
+			SpawnBag.Add(Entry.EnemyClass);
+		}
+	}
+	<span class="c">// shuffled, so the kinds mix through the wave</span>
+	<span class="k">for</span> (int32 i = SpawnBag.Num() - <span class="n">1</span>; i > <span class="n">0</span>; --i)
+	{
+		SpawnBag.Swap(i, FMath::RandRange(<span class="n">0</span>, i));
+	}
+}</code></pre>
+    </div>
+
+    <div class="exhibit">
+      <div class="note">
+        <h3>Keeping bodies without the cost</h3>
+        <span class="file">Enemies/IpzCorpseSubsystem.cpp</span>
+        <p>Bodies stay on the ground so fights leave a mark, but a world subsystem caps them. When the cap is reached it removes bodies the player has already searched first, and only then the oldest one with loot still on it.</p>
+      </div>
+<pre><code><span class="k">while</span> (Cap > <span class="n">0</span> && Corpses.Num() > Cap)
+{
+	<span class="c">// searched (or empty) bodies go first, oldest first</span>
+	int32 Index = Corpses.IndexOfByPredicate(
+		[](<span class="k">const</span> TWeakObjectPtr&lt;AActor&gt;& Body)
+	{
+		<span class="k">const</span> UIpzLootComponent* Loot = Body.IsValid()
+			? Body->FindComponentByClass&lt;UIpzLootComponent&gt;() : <span class="k">nullptr</span>;
+		<span class="k">return</span> !Loot || Loot->IsEmpty();
+	});
+	Index = Index == INDEX_NONE ? <span class="n">0</span> : Index;
+
+	AActor* Oldest = Corpses[Index].Get();
+	Corpses.RemoveAt(Index);
+	<span class="k">if</span> (AIpzEnemyBase* Enemy = Cast&lt;AIpzEnemyBase&gt;(Oldest))
+	{
+		Enemy->RemoveCorpse();   <span class="c">// sinks away, drops its loot container</span>
+	}
+}</code></pre>
+    </div>
+  </div>
+</section>
+
+<section id="levels">
+  <div class="wrap">
+    <div class="stack prose">
+      <span class="eyebrow">Levels</span>
+      <h2>Places to fight in</h2>
+      <p class="muted">The game has gone through several playable spaces: a night street on the edge of a forest, a metro station and its tunnels, a cemetery arena and the hunter's attic flat. Each is lit for a low-key, rainy night.</p>
+    </div>
+    <div class="gallery">
+      <figure class="g-6 ar-wide"><img src="img/lv_puddles.jpg" alt="Wet cobbled street at night with warm shop windows and lamps reflected in puddles" width="1600" height="900"><figcaption>Night street: wet cobbles and lamp reflections</figcaption></figure>
+      <figure class="g-3 ar-wide"><img src="img/lv_outskirts.jpg" alt="Four views of a foggy suburban street at night with a lone street lamp and string lights" width="1288" height="605"><figcaption>Outskirts wave arena, mood pass: fog, sodium lamps, treeline</figcaption></figure>
+      <figure class="g-3 ar-wide"><img src="img/lv_lamp.jpg" alt="Street lamp reflected in a puddle at night" width="1600" height="900"><figcaption>Puddle reflections</figcaption></figure>
+      <figure class="g-2 ar-wide"><img src="img/lv_tunnel.jpg" alt="Curved tiled metro tunnel with orange tiles and a dark track" width="1374" height="655"><figcaption>Metro station: track tunnel</figcaption></figure>
+      <figure class="g-2 ar-wide"><img src="img/lv_platform.jpg" alt="Metro platform with white and orange tiles and a red door" width="1374" height="655"><figcaption>Metro station: platform</figcaption></figure>
+      <figure class="g-2 ar-wide"><img src="img/lv_hall.jpg" alt="Tiled metro ticket hall with red doors and a notice board" width="1374" height="655"><figcaption>Metro station: hall</figcaption></figure>
+      <figure class="g-6"><img src="img/lv_cem_chapel.jpg" alt="Wide view of a moonlit cemetery with a lit chapel and stone tombs" width="1489" height="361"><figcaption>Cemetery arena: chapel and tombs</figcaption></figure>
+      <figure class="g-6"><img src="img/lv_cem_avenue.jpg" alt="Wide view of a cemetery avenue lined with mausoleums at night" width="1489" height="361"><figcaption>Cemetery arena: the main avenue</figcaption></figure>
+      <figure class="g-3 ar-wide"><img src="img/lv_attic.jpg" alt="Cluttered attic flat with slanted ceiling, desk, shelves and a mattress" width="1600" height="900"><figcaption>The hunter's attic flat</figcaption></figure>
+      <figure class="g-3 ar-wide"><img src="img/lv_cluewall.jpg" alt="Desk under a slanted roof with notes pinned to a board above it" width="1600" height="900"><figcaption>Attic: the clue wall</figcaption></figure>
+    </div>
+<div class="exhibit">
+    <div class="note">
+            <h3>Planning the outskirts</h3>
+      <p>The current level is a Midwest suburb at the edge of a forest. A street of houses is the wave arena, with spawns from the treeline, the backyards and both ends of the road.</p>
+      <p>Past it, a forest trail leads by a pond, a ranger cabin and a creek to an abandoned carnival.</p>
+      <p class="muted">I lay levels out first in a top-down planner at 1 m per square. It marks spawns, ammo and heal spots, cover, interactable props and the route, so the team agrees on the space before anything is built.</p>
+    </div>
+    <figure><img src="img/lv_planner.jpg" alt="Top-down level planner showing the street of houses, spawn points, a pond, forest trail, creek and carnival grounds" width="898" height="873"><figcaption>Outskirts level plan: street arena, forest trail and carnival</figcaption></figure>
+  </div>
+  </div>
+</section>
+
+<section id="stack">
+  <div class="wrap stack prose">
+    <span class="eyebrow">Tools</span>
+    <h2>Stack</h2>
+    <div class="stack-list">
+      <span class="chip">Unreal Engine 5</span><span class="chip">C++</span><span class="chip">Blueprints</span><span class="chip">Gameplay Ability System</span><span class="chip">StateTree</span><span class="chip">Enhanced Input</span><span class="chip">UMG / Slate</span><span class="chip">Niagara</span><span class="chip">Blender</span><span class="chip">Git LFS</span><span class="chip">GitHub pull requests</span>
+    </div>
+  </div>
+</section>
+</main>
+
+<footer>
+  <div class="wrap">
+    <span>Michał · team lead and gameplay programmer</span>
+    <span><a href="https://github.com/mw002kk">GitHub</a></span>
+  </div>
+</footer>
+
+</body>
+</html>
