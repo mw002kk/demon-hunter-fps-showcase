@@ -30,11 +30,10 @@ damage resolution, bullet braking in the time stop, wave spawn bags and the corp
 
 ## Screenshots
 
-![Machine pistol on the night street](img/gp_street_tmp.jpg)
-
 | | |
 |---|---|
-| ![Attic flat](img/gp_attic_rifle.jpg) | ![Trader screen](img/gp_trader.jpg) |
+| ![Machine pistol on the night street](img/gp_street_tmp.jpg) | ![Attic flat](img/gp_attic_rifle.jpg) |
+| ![Trader screen](img/gp_trader.jpg) | ![Outskirts level plan](img/lv_planner.jpg) |
 | ![Night street](img/lv_puddles.jpg) | ![TMP machine pistol](img/tmp_night.jpg) |
 
 More gameplay, level and weapon shots are on the [live page](https://mw002kk.github.io/demon-hunter-fps-showcase/).

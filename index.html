@@ -4,7 +4,6 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>Demon Hunter FPS</title>
-<meta name="claude:viewport-fit-sides" content="cover">
 <meta name="description" content="A first-person action shooter in Unreal Engine 5 with C++ gameplay systems: GAS abilities, a time stop, a damage pipeline, enemy AI, waves and inventory.">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -42,7 +41,7 @@ section { padding-block: clamp(3rem, 7vw, 5.5rem); border-top: 1px solid var(--l
 /* hero: the engraved muzzle render carries it */
 .hero { position: relative; }
 .hero img { display: block; width: 100%; height: auto; aspect-ratio: 1330/629; object-fit: cover; max-width: 100%; }
-.hero-text { padding-block: 2rem 3.5rem; display: grid; gap: 1.1rem; }
+.hero-text { padding-block: clamp(3rem, 8vw, 6rem) 3.5rem; display: grid; gap: 1.1rem; }
 .hero h1 { font-family: var(--f-display); font-size: clamp(2.6rem, 8vw, 5.4rem); line-height: .95; letter-spacing: .01em; }
 .hero .lede { font-size: 1.15rem; color: var(--bone); max-width: 60ch; }
 .facts { display: flex; flex-wrap: wrap; gap: .5rem 1.6rem; font: 400 .85rem/1.4 var(--f-mono); color: var(--ash); }
@@ -108,7 +107,6 @@ footer .wrap { display: flex; flex-wrap: wrap; justify-content: space-between; g
 
 
 <header class="hero">
-  <img src="img/gp_street_tmp.jpg" alt="First-person view holding the machine pistol on a wet, lamp-lit cobbled street at night, with the health bar, ability cooldowns and ammo counter on screen" width="1330" height="629">
   <div class="wrap hero-text">
     <span class="eyebrow">Unreal Engine 5 · C++ · team project</span>
     <h1>Demon Hunter FPS</h1>
@@ -134,8 +132,9 @@ footer .wrap { display: flex; flex-wrap: wrap; justify-content: space-between; g
       <p class="muted">Captured in the editor from builds in progress.</p>
     </div>
     <div class="gallery">
+      <figure class="g-3"><img src="img/gp_street_tmp.jpg" alt="First-person view holding the machine pistol on a wet, lamp-lit cobbled street at night, with health, ability cooldowns and ammo on the HUD" width="1330" height="629"><figcaption>Machine pistol on the night street: health, ability cooldowns and ammo on the HUD</figcaption></figure>
       <figure class="g-3"><img src="img/gp_attic_rifle.jpg" alt="First-person rifle aimed at a chalk sigil on the wall of a dim attic flat, HUD with time stop and wraith's hand cooldowns" width="1523" height="857"><figcaption>The hunter's attic flat: chalk sigil, rain on the window, ability cooldowns bottom left</figcaption></figure>
-      <figure class="g-3"><img src="img/gp_trader.jpg" alt="Trader screen with the trader's stock, the player's backpack, hotbar keys and a talisman slot, describing the machine pistol" width="1600" height="759"><figcaption>Trading: drag to buy or sell, bind items to keys, trust level with the trader</figcaption></figure>
+      <figure class="g-6"><img src="img/gp_trader.jpg" alt="Trader screen with the trader's stock, the player's backpack, hotbar keys and a talisman slot, describing the machine pistol" width="1600" height="759"><figcaption>Trading: drag to buy or sell, bind items to keys, trust level with the trader</figcaption></figure>
       <figure class="g-6 ar-wide"><img src="img/tmp_night.jpg" alt="The TMP machine pistol lying on wet asphalt at night" width="1600" height="900"><figcaption>The machine pistol model: real scale, 30-round stick magazine, rigged bolt and magazine</figcaption></figure>
       <figure class="g-2 ar-wide"><img src="img/tmp_front.jpg" alt="Front three-quarter render of the TMP with the long magazine" width="1600" height="900"><figcaption>Machine pistol, front three-quarter</figcaption></figure>
       <figure class="g-2 ar-wide"><img src="img/tmp_rear.jpg" alt="Rear three-quarter render of the TMP showing the rear sight and grip" width="1600" height="900"><figcaption>Machine pistol, rear three-quarter</figcaption></figure>
